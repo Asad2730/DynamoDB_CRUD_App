@@ -2,6 +2,8 @@ package routes
 
 import (
 	serviceConfig "github.com/Asad2730/DynamoDB_CRUD_App/config"
+	HealthHandler "github.com/Asad2730/DynamoDB_CRUD_App/internal/handlers/health"
+	ProductHandler "github.com/Asad2730/DynamoDB_CRUD_App/internal/handlers/product"
 	"github.com/Asad2730/DynamoDB_CRUD_App/internal/repositories/adapter"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -36,6 +38,7 @@ func (r *Router) setConfigRouters() {
 }
 
 func (r *Router) RouterHealth(repositories adapter.Interface) {
+
 	handler := HealthHandler.NewHandler(repositories)
 
 	r.router.Route("/health", func(r chi.Router) {
