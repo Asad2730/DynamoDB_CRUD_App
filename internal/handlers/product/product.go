@@ -3,6 +3,7 @@ package product
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/Asad2730/DynamoDB_CRUD_App/internal/handlers"
 	"github.com/Asad2730/DynamoDB_CRUD_App/internal/handlers/product"
@@ -127,9 +128,29 @@ func (h *Handler) Options(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) getBodyAndValidate(r *http.Request, ID uuid.UUID) (*EntityProduct.Product, error) {
 
-	body := &EntityProduct.Product{}
+	productBody := &EntityProduct.Product{}
+	body, err := h.Rules.ConvertIOReaderToStruct(r.Body, productBody)
+
+	if err != nil {
+		return &EntityProduct.Product{}, errors.New("body is required")
+	}
+
+	productParsed, err := EntityProduct.InterfaceToModel(body)
+
+	if err != nil {
+		return &EntityProduct.Product{}, errors.New("error on converting body")
+	}
+
+	return productParsed, h.Rules.Validate(productParsed)
 }
 
-func setDefaultValue() {
+func setDefaultValue(product *EntityProduct.Product, ID uuid.UUID) {
 
+	product.UpdatedAt = time.Now()
+	if ID == uuid.Nil {
+		product.ID = uuid.New()
+		product.time = time.Now()
+	} else {
+		product.ID = ID
+	}
 }
