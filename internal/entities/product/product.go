@@ -2,13 +2,16 @@ package product
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/Asad2730/DynamoDB_CRUD_App/internal/entities"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
 type Product struct {
 	entities.Base
-	Name string `json:"name"`
+	Name string    `json:"name"`
+	Time time.Time `json:"time"`
 }
 
 func InterfaceToModel(data interface{}) (instance *Product, err error) {
@@ -21,7 +24,7 @@ func InterfaceToModel(data interface{}) (instance *Product, err error) {
 }
 
 func (p *Product) GetFilterId() map[string]interface{} {
-
+	return nil
 }
 
 func (p *Product) TableName() string {
@@ -33,9 +36,9 @@ func (p *Product) Bytes() ([]byte, error) {
 }
 
 func (p *Product) GetMap() map[string]interface{} {
-
+	return nil
 }
 
-func (p *Product) ParseDynamoAttributeToStruct() map[string]interface{} {
-
+func (p *Product) ParseDynamoAttributeToStruct(res *dynamodb.GetItemOutput) map[string]interface{} {
+	return nil
 }

@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	"time"
+
 	"github.com/Asad2730/DynamoDB_CRUD_App/internal/entities/product"
 	"github.com/Asad2730/DynamoDB_CRUD_App/internal/repositories/adapter"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/google/uuid"
 )
 
@@ -30,21 +33,72 @@ func (c *Controller) ListOne(id uuid.UUID) (entity product.Product, err error) {
 		return entity, err
 	}
 
-	return product.ParseDynamoAttributeToStruct(res.Item)
+	return product.ParseDynamoAttributeToStruct(res.Item), nil
+
 }
 
-func (c *Controller) ListAll() (entity []product.Product, err error) {
+func (c *Controller) ListAll() (entities []product.Product, err error) {
 
+	entities = []product.Product{}
+	var entity product.Product
+	filter := expression.Name("name").NotEqual(expression.Value(""))
+
+	condition, err := expression.NewBuilder().WithFilter(filter).Build()
+
+	if err != nil {
+		return entities, err
+	}
+
+	res, err := c.repository.FindAll(condition, entity.TableName())
+
+	if err != nil {
+		return entities, err
+	}
+
+	if res != nil {
+		for _, value := range res.Items {
+			entity, err := product.ParseDynamoAttributeToStruct(value)
+			if err != nil {
+				return entities, err
+			}
+
+			entities = append(entities, entity)
+		}
+	}
+
+	return entities, nil
 }
 
 func (c *Controller) Create(entity *product.Product) (uuid.UUID, error) {
 
+	entity.CreatedAt = time.Now()
+	_, err := c.repository.CreateOrUpdate(entity.GetMap(), entity.TableName())
+	return entity.ID, err
 }
 
 func (c *Controller) Update(id uuid.UUID, entity *product.Product) error {
 
+	found, err := c.ListOne(id)
+	if err != nil {
+		return err
+	}
+
+	found.ID = id
+	found.Name = entity.Name
+	found.UpdatedAt = time.Now()
+
+	_, err = c.repository.CreateOrUpdate(found.GetMap(), entity.TableName())
+
+	return err
 }
 
 func (c *Controller) Remove(id uuid.UUID) error {
+	entity, err := c.ListOne(id)
+	if err != nil {
+		return err
+	}
 
+	_, err = c.repository.Delete(entity.GetFilterId(), entity.TableName())
+
+	return err
 }

@@ -5,9 +5,12 @@ import (
 	"net/http"
 	"time"
 
+	product "github.com/Asad2730/DynamoDB_CRUD_App/internal/controllers"
+	EntityProduct "github.com/Asad2730/DynamoDB_CRUD_App/internal/entities/product"
 	"github.com/Asad2730/DynamoDB_CRUD_App/internal/handlers"
-	"github.com/Asad2730/DynamoDB_CRUD_App/internal/handlers/product"
 	"github.com/Asad2730/DynamoDB_CRUD_App/internal/repositories/adapter"
+	Rules "github.com/Asad2730/DynamoDB_CRUD_App/internal/rules"
+	RulesProduct "github.com/Asad2730/DynamoDB_CRUD_App/internal/rules/RulesProduct"
 	Http "github.com/Asad2730/DynamoDB_CRUD_App/utils/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -16,10 +19,11 @@ import (
 type Handler struct {
 	handlers.Interface
 	Controller product.Interface
-	Rules      Rules.Intergace
+	Rules      Rules.Interface
 }
 
 func NewHandler(repository adapter.Interface) handlers.Interface {
+
 	return &Handler{
 		Controller: product.NewController(repository),
 		Rules:      RulesProduct.NewRules(),
@@ -30,6 +34,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	if chi.URLParam(r, "ID") != "" {
 		h.GetOne(w, r)
+
 	} else {
 		h.GetAll(w, r)
 	}
@@ -80,7 +85,7 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Http.StatusOk(w, r, map[string]interface{}{"id": ID.string()})
+	Http.StatusOk(w, r, map[string]interface{}{"id": ID})
 }
 
 func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
@@ -98,7 +103,7 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := Controller.Update(ID, body); err != nil {
+	if err := h.Controller.Update(ID, body); err != nil {
 
 		Http.StatusInternalServerError(w, r, err)
 		return
@@ -149,7 +154,7 @@ func setDefaultValue(product *EntityProduct.Product, ID uuid.UUID) {
 	product.UpdatedAt = time.Now()
 	if ID == uuid.Nil {
 		product.ID = uuid.New()
-		product.time = time.Now()
+		product.Time = time.Now()
 	} else {
 		product.ID = ID
 	}
